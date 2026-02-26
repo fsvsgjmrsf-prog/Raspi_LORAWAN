@@ -274,7 +274,7 @@ dmesg | grep -i spi
 On the Raspberry Pi:
 
 ```bash
-git clone https://github.com/<your-repo>/IOT_Gateway.git ~/IOT_Gateway
+git clone https://github.com/fsvsgjmrsf-prog/Raspi_LORAWAN.git ~/IOT_Gateway
 cd ~/IOT_Gateway
 ```
 

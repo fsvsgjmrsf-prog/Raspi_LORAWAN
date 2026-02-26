@@ -92,7 +92,7 @@ See `hardware/elecrow-lr1302-pinout.md` for full GPIO map and jumper reference.
 
 ```bash
 # Clone this repository
-git clone <this-repo> ~/IOT_Gateway
+git clone https://github.com/fsvsgjmrsf-prog/Raspi_LORAWAN.git ~/IOT_Gateway
 cd ~/IOT_Gateway
 
 # Run the installer as root
