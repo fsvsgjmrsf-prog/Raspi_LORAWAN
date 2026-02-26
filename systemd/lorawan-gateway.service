@@ -1,0 +1,32 @@
+[Unit]
+Description=LoRaWAN UDP Packet Forwarder (Elecrow LR1302)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/etc/lorawan-gateway
+
+# Power on and release reset before starting
+ExecStartPre=/opt/lorawan-gateway/reset_lgw.sh start
+
+# Start the UDP packet forwarder
+ExecStart=/opt/lorawan-gateway/lora_pkt_fwd -c /etc/lorawan-gateway/global_conf.json
+
+# Assert reset and cut power after stopping
+ExecStopPost=/opt/lorawan-gateway/reset_lgw.sh stop
+
+# Restart policy
+Restart=on-failure
+RestartSec=10
+StartLimitInterval=120
+StartLimitBurst=5
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=lorawan-gateway
+
+[Install]
+WantedBy=multi-user.target

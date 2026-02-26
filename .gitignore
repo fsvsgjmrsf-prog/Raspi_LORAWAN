@@ -1,0 +1,44 @@
+# LoRaWAN Gateway — .gitignore
+
+# Local configuration (contains Gateway EUI — do not commit)
+config/local_conf.json
+
+# Build artifacts
+build/
+*.o
+*.d
+
+# Logs and PIDs
+*.log
+*.pid
+logs/
+
+# Environment / secrets
+.env
+.env.*
+*.secret
+
+# Binaries and compiled output
+lora_pkt_fwd
+util_*
+chip_id
+
+# Temporary files
+*.tmp
+*.bak
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python cache (if any tooling used)
+__pycache__/
+*.pyc
