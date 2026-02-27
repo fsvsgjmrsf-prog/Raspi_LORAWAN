@@ -45,6 +45,7 @@ By the end of this guide you will have:
 
 | Section | Topic |
 |---------|-------|
+| [1. Prerequisites (Step 0)](#1-prerequisites-step-0) | Install git, i2c-tools, build tools |
 | [2. Hardware Prerequisites](#2-hardware-prerequisites) | BOM, GPIO map, antenna warning |
 | [3. OS Preparation](#3-os-preparation) | Flash, SSH, enable SPI/I2C/UART |
 | [4. Repository Setup](#4-repository-setup) | Clone or transfer repo to Pi |
@@ -57,6 +58,40 @@ By the end of this guide you will have:
 | [11. Maintenance](#11-maintenance) | Reconfigure, update binary, log mgmt |
 | [12. Troubleshooting](#12-troubleshooting) | Common failures, fixes |
 | [13. Reference](#13-reference) | File table, external links |
+
+---
+
+## 1. Prerequisites (Step 0)
+
+### OBLIGATORIO en Raspberry Pi OS fresco
+
+En una instalación limpia de Raspberry Pi OS Lite, herramientas como `git` e `i2c-tools`
+no están preinstaladas. Ejecuta este paso antes que cualquier otro.
+
+```bash
+# Opción A (recomendada — automática, paso a paso)
+sudo apt update && sudo apt install -y git
+git clone https://github.com/fsvsgjmrsf-prog/Raspi_LORAWAN.git ~/IOT_Gateway
+cd ~/IOT_Gateway
+sudo bash scripts/01-prerequisites.sh
+
+# Opción B (todo en uno — sin clonar primero)
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/fsvsgjmrsf-prog/Raspi_LORAWAN/main/scripts/01-prerequisites.sh)"
+```
+
+> **Nota:** `setup.sh` detecta automáticamente si faltan prerrequisitos y ejecuta
+> `01-prerequisites.sh` antes de continuar.
+
+### Packages installed by 01-prerequisites.sh
+
+| Package | Purpose |
+|---------|---------|
+| `git` | Clone the Elecrow sx1302_hal repository |
+| `i2c-tools` | Detect RTC at I2C address 0x68 (`i2cdetect`) |
+| `build-essential` | GCC, make, and standard build tools |
+| `cmake` | Required by some sx1302_hal build variants |
+| `python3`, `python3-pip`, `python3-dev` | Python tooling (optional utilities) |
+| `libusb-1.0-0-dev` | USB library required by sx1302_hal |
 
 ---
 

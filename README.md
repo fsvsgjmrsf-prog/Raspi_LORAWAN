@@ -72,6 +72,27 @@ Este proyecto proporciona un instalador completo y listo para producción de un 
 
 ---
 
+## Paso 0: Instalación de prerrequisitos (OBLIGATORIO en Raspberry Pi OS fresco)
+
+En una instalación limpia de Raspberry Pi OS Lite, herramientas como `git` e `i2c-tools`
+no están preinstaladas. Ejecuta este paso antes que cualquier otro.
+
+```bash
+# Opción A (recomendada — automática, paso a paso)
+sudo apt update && sudo apt install -y git
+git clone https://github.com/fsvsgjmrsf-prog/Raspi_LORAWAN.git ~/IOT_Gateway
+cd ~/IOT_Gateway
+sudo bash scripts/01-prerequisites.sh
+
+# Opción B (todo en uno — sin clonar primero)
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/fsvsgjmrsf-prog/Raspi_LORAWAN/main/scripts/01-prerequisites.sh)"
+```
+
+> **Nota:** `setup.sh` detecta automáticamente si faltan prerrequisitos y ejecuta
+> `01-prerequisites.sh` antes de continuar.
+
+---
+
 ## Instalación rápida (Quick Start)
 
 ```bash
@@ -118,6 +139,7 @@ Raspi_LORAWAN/
 ├── .gitignore
 │
 ├── scripts/
+│   ├── 01-prerequisites.sh            ← Instala git, i2c-tools y dependencias de build
 │   ├── setup.sh                       ← Instalador one-shot (ejecutar como root)
 │   ├── configure_gateway.sh           ← Configuración interactiva EUI + TTN
 │   └── reset_lgw.sh                   ← Secuenciador GPIO de power/reset

@@ -88,6 +88,25 @@ See `hardware/elecrow-lr1302-pinout.md` for full GPIO map and jumper reference.
 
 ## Software Installation
 
+### Step 0: Prerequisites (OBLIGATORIO en Raspberry Pi OS fresco)
+
+En una instalación limpia de Raspberry Pi OS Lite, herramientas como `git` e `i2c-tools`
+no están preinstaladas. Ejecuta este paso antes que cualquier otro.
+
+```bash
+# Opción A (recomendada — automática, paso a paso)
+sudo apt update && sudo apt install -y git
+git clone https://github.com/fsvsgjmrsf-prog/Raspi_LORAWAN.git ~/IOT_Gateway
+cd ~/IOT_Gateway
+sudo bash scripts/01-prerequisites.sh
+
+# Opción B (todo en uno — sin clonar primero)
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/fsvsgjmrsf-prog/Raspi_LORAWAN/main/scripts/01-prerequisites.sh)"
+```
+
+> **Nota:** `setup.sh` detecta automáticamente si faltan prerrequisitos y ejecuta
+> `01-prerequisites.sh` antes de continuar.
+
 ### Quick Install (one command)
 
 ```bash
@@ -230,6 +249,7 @@ IOT_Gateway/
 ├── .gitignore                         ← Standard ignores (local_conf.json excluded)
 │
 ├── scripts/
+│   ├── 01-prerequisites.sh            ← Install git, i2c-tools, build deps (run first)
 │   ├── setup.sh                       ← One-shot installer (run as root)
 │   ├── configure_gateway.sh           ← Interactive EUI + TTN config
 │   └── reset_lgw.sh                   ← GPIO reset (used by systemd service)

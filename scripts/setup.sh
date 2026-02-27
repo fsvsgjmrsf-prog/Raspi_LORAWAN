@@ -27,6 +27,20 @@ BOLD='\033[1m'
 RESET='\033[0m'
 
 # ---------------------------------------------------------------------------
+# Step -1: Prerequisites guard
+# ---------------------------------------------------------------------------
+if ! command -v git >/dev/null 2>&1 || ! command -v i2cdetect >/dev/null 2>&1; then
+    echo -e "${YELLOW}[WARN]  Missing prerequisites. Running 01-prerequisites.sh first...${RESET}"
+    PREREQ_SCRIPT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/01-prerequisites.sh"
+    if [[ -f "${PREREQ_SCRIPT}" ]]; then
+        bash "${PREREQ_SCRIPT}"
+    else
+        echo -e "${RED}[ERROR] 01-prerequisites.sh not found. Run it manually first.${RESET}"
+        exit 1
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
 REPO_URL="https://github.com/Elecrow-RD/LR1302_loraWAN.git"
