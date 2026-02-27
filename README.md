@@ -210,6 +210,33 @@ sudo systemctl restart lorawan-gateway
 
 ---
 
+## Cómo usar @claude en este repositorio
+
+Este repositorio tiene integración oficial de **Claude Code GitHub Actions**.
+Solo menciona `@claude` en cualquier Issue o comentario de PR y Claude responderá automáticamente.
+
+### Ejemplos de uso
+
+```
+@claude revisa este código
+@claude arregla el error de SPI en setup.sh
+@claude añade soporte para Meshtastic
+@claude explica cómo funciona el reset GPIO en reset_lgw.sh
+@claude mejora el manejo de errores en configure_gateway.sh
+```
+
+Claude analizará el contexto, hará los cambios necesarios en el código y **creará automáticamente un Pull Request** con los cambios.
+
+### Requisitos previos (administradores)
+
+Para que la integración funcione el administrador del repositorio debe:
+1. Instalar la GitHub App oficial: [github.com/apps/claude](https://github.com/apps/claude)
+2. Añadir el secreto `ANTHROPIC_API_KEY` en Settings → Secrets and variables → Actions
+
+El workflow está en `.github/workflows/claude.yml`.
+
+---
+
 ## Solución de problemas rápida
 
 | Síntoma | Causa probable | Solución rápida |
