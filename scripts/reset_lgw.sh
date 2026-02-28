@@ -18,31 +18,57 @@ SX1261_GPIO=22      # SX1261 RESET  — BCM22, Physical Pin 15
 
 SYS_GPIO=/sys/class/gpio
 
-# --- Helpers ---------------------------------------------------------------
+# --- Detect GPIO backend ---------------------------------------------------
+#
+# Raspberry Pi OS Bookworm replaced raspi-gpio with pinctrl.
+# Both access BCM hardware registers directly via /dev/gpiomem, bypassing
+# kernel driver claims that cause EINVAL on sysfs /sys/class/gpio/export.
+# Fall back to sysfs only when neither tool is available.
 
-gpio_export() {
-    local pin=$1
-    if [ ! -d "${SYS_GPIO}/gpio${pin}" ]; then
-        echo "${pin}" > "${SYS_GPIO}/export"
-        sleep 0.05
-    fi
+if command -v pinctrl &>/dev/null; then
+    GPIO_BACKEND="pinctrl"
+elif command -v raspi-gpio &>/dev/null; then
+    GPIO_BACKEND="raspi-gpio"
+else
+    GPIO_BACKEND="sysfs"
+fi
+
+# --- Backend helpers -------------------------------------------------------
+
+gpio_set() {
+    # gpio_set <pin> <op>   op = "op" (output), "dh" (drive high), "dl" (drive low)
+    local pin=$1 op=$2
+    case "${GPIO_BACKEND}" in
+        pinctrl)   pinctrl set "${pin}" "${op}" ;;
+        raspi-gpio) raspi-gpio set "${pin}" "${op}" ;;
+        sysfs)     _sysfs_set "${pin}" "${op}" ;;
+    esac
 }
 
-gpio_unexport() {
+_sysfs_set() {
+    local pin=$1 op=$2
+    if [ ! -d "${SYS_GPIO}/gpio${pin}" ]; then
+        echo "${pin}" > "${SYS_GPIO}/export" 2>/dev/null || true
+        sleep 0.1
+    fi
+    if [ ! -d "${SYS_GPIO}/gpio${pin}" ]; then
+        echo "[reset_lgw] ERROR: Cannot export GPIO${pin} — pin may be claimed by a kernel overlay" >&2
+        return 1
+    fi
+    case "${op}" in
+        op) echo "out" > "${SYS_GPIO}/gpio${pin}/direction" ;;
+        dh) echo "out" > "${SYS_GPIO}/gpio${pin}/direction"
+            echo "1"   > "${SYS_GPIO}/gpio${pin}/value" ;;
+        dl) echo "out" > "${SYS_GPIO}/gpio${pin}/direction"
+            echo "0"   > "${SYS_GPIO}/gpio${pin}/value" ;;
+    esac
+}
+
+gpio_unexport_sysfs() {
     local pin=$1
     if [ -d "${SYS_GPIO}/gpio${pin}" ]; then
-        echo "${pin}" > "${SYS_GPIO}/unexport"
+        echo "${pin}" > "${SYS_GPIO}/unexport" 2>/dev/null || true
     fi
-}
-
-gpio_direction() {
-    local pin=$1 dir=$2
-    echo "${dir}" > "${SYS_GPIO}/gpio${pin}/direction"
-}
-
-gpio_write() {
-    local pin=$1 val=$2
-    echo "${val}" > "${SYS_GPIO}/gpio${pin}/value"
 }
 
 # --- Main ------------------------------------------------------------------
@@ -57,32 +83,28 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
+echo "[reset_lgw] GPIO backend: ${GPIO_BACKEND}"
+
 case "$1" in
     start)
-        echo "[reset_lgw] Exporting GPIOs..."
-        gpio_export  ${POWER_GPIO}
-        gpio_export  ${RESET_GPIO}
-        gpio_export  ${SX1261_GPIO}
-
-        gpio_direction ${POWER_GPIO}  out
-        gpio_direction ${RESET_GPIO}  out
-        gpio_direction ${SX1261_GPIO} out
-
         echo "[reset_lgw] Asserting reset low..."
-        gpio_write ${RESET_GPIO}  0
-        gpio_write ${SX1261_GPIO} 0
+        gpio_set ${RESET_GPIO}  op
+        gpio_set ${SX1261_GPIO} op
+        gpio_set ${RESET_GPIO}  dl
+        gpio_set ${SX1261_GPIO} dl
         sleep 0.1
 
         echo "[reset_lgw] Enabling power (GPIO${POWER_GPIO} HIGH)..."
-        gpio_write ${POWER_GPIO} 1
+        gpio_set ${POWER_GPIO} op
+        gpio_set ${POWER_GPIO} dh
         sleep 0.1
 
         echo "[reset_lgw] Releasing SX1302 reset (GPIO${RESET_GPIO} HIGH)..."
-        gpio_write ${RESET_GPIO} 1
+        gpio_set ${RESET_GPIO} dh
         sleep 0.1
 
         echo "[reset_lgw] Releasing SX1261 reset (GPIO${SX1261_GPIO} HIGH)..."
-        gpio_write ${SX1261_GPIO} 1
+        gpio_set ${SX1261_GPIO} dh
         sleep 0.05
 
         echo "[reset_lgw] Gateway powered on and reset released."
@@ -90,24 +112,21 @@ case "$1" in
 
     stop)
         echo "[reset_lgw] Asserting reset..."
-        gpio_export  ${RESET_GPIO}  || true
-        gpio_export  ${SX1261_GPIO} || true
-        gpio_export  ${POWER_GPIO}  || true
-
-        gpio_direction ${RESET_GPIO}  out 2>/dev/null || true
-        gpio_direction ${SX1261_GPIO} out 2>/dev/null || true
-        gpio_direction ${POWER_GPIO}  out 2>/dev/null || true
-
-        gpio_write ${RESET_GPIO}  0 2>/dev/null || true
-        gpio_write ${SX1261_GPIO} 0 2>/dev/null || true
+        gpio_set ${RESET_GPIO}  op 2>/dev/null || true
+        gpio_set ${SX1261_GPIO} op 2>/dev/null || true
+        gpio_set ${RESET_GPIO}  dl 2>/dev/null || true
+        gpio_set ${SX1261_GPIO} dl 2>/dev/null || true
         sleep 0.05
 
         echo "[reset_lgw] Cutting power (GPIO${POWER_GPIO} LOW)..."
-        gpio_write ${POWER_GPIO} 0 2>/dev/null || true
+        gpio_set ${POWER_GPIO} op 2>/dev/null || true
+        gpio_set ${POWER_GPIO} dl 2>/dev/null || true
 
-        gpio_unexport ${RESET_GPIO}  || true
-        gpio_unexport ${SX1261_GPIO} || true
-        gpio_unexport ${POWER_GPIO}  || true
+        if [[ "${GPIO_BACKEND}" == "sysfs" ]]; then
+            gpio_unexport_sysfs ${RESET_GPIO}
+            gpio_unexport_sysfs ${SX1261_GPIO}
+            gpio_unexport_sysfs ${POWER_GPIO}
+        fi
 
         echo "[reset_lgw] Gateway powered off."
         ;;
