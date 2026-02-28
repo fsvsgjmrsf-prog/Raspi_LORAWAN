@@ -23,8 +23,12 @@ SYS_GPIO=/sys/class/gpio
 gpio_export() {
     local pin=$1
     if [ ! -d "${SYS_GPIO}/gpio${pin}" ]; then
-        echo "${pin}" > "${SYS_GPIO}/export"
-        sleep 0.05
+        echo "${pin}" > "${SYS_GPIO}/export" 2>/dev/null || true
+        sleep 0.1   # Give the kernel time to create the gpio directory
+    fi
+    if [ ! -d "${SYS_GPIO}/gpio${pin}" ]; then
+        echo "[reset_lgw] ERROR: Cannot export GPIO${pin} — pin may be claimed by a kernel overlay" >&2
+        return 1
     fi
 }
 
