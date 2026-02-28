@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/etc/lorawan-gateway
+WorkingDirectory=/opt/lorawan-gateway
 
 # Power on and release reset before starting
 ExecStartPre=/opt/lorawan-gateway/reset_lgw.sh start
