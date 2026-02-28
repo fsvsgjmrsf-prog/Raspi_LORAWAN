@@ -65,7 +65,8 @@ apt-get install -y \
     python3 \
     python3-pip \
     python3-dev \
-    libusb-1.0-0-dev
+    libusb-1.0-0-dev \
+    raspi-gpio
 
 success "All prerequisite packages installed"
 
