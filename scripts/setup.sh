@@ -185,8 +185,32 @@ build_sx1302_hal() {
     git clone --depth 1 "${REPO_URL}" "${BUILD_DIR}"
 
     info "Building..."
-    cd "${BUILD_DIR}"
-    make -j"$(nproc)"
+
+    # The Elecrow fork does not have a root Makefile; build subdirectories in order.
+    if [[ -f "${BUILD_DIR}/Makefile" ]]; then
+        make -C "${BUILD_DIR}" -j"$(nproc)"
+    else
+        # Build libloragw (HAL library) first — packet_forwarder depends on it
+        if [[ -f "${BUILD_DIR}/libloragw/Makefile" ]]; then
+            info "Building libloragw..."
+            make -C "${BUILD_DIR}/libloragw" -j"$(nproc)"
+        fi
+
+        if [[ -f "${BUILD_DIR}/packet_forwarder/Makefile" ]]; then
+            info "Building packet_forwarder..."
+            make -C "${BUILD_DIR}/packet_forwarder" -j"$(nproc)"
+        else
+            # Last resort: find the first Makefile in the tree
+            local found_makefile
+            found_makefile=$(find "${BUILD_DIR}" -name "Makefile" -maxdepth 3 -type f | head -1 || true)
+            if [[ -n "${found_makefile}" ]]; then
+                warn "No standard Makefile structure found. Attempting build in: $(dirname "${found_makefile}")"
+                make -C "$(dirname "${found_makefile}")" -j"$(nproc)"
+            else
+                die "No Makefile found in ${BUILD_DIR}. Cannot build the sx1302_hal."
+            fi
+        fi
+    fi
 
     success "Build complete"
 }
