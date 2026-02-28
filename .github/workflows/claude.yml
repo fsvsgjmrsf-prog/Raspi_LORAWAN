@@ -21,14 +21,18 @@ permissions:
 
 jobs:
   claude:
-    # Only run when @claude is mentioned
     if: |
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'issues' && contains(github.event.issue.body, '@claude'))
     runs-on: ubuntu-latest
     steps:
-      - uses: anthropics/claude-code-action@v1
+      - name: Checkout repository
+        uses: actions/checkout@v4
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@v1
           # claude_args: "--max-turns 10 --model claude-sonnet-4-6"
